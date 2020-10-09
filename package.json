@@ -70,6 +70,7 @@
   },
   "repository": "fdesjardins/terminal-procedures",
   "scripts": {
+    "debug": "node ./example.js",
     "test": "eslint *.js && nyc mocha test.js"
   }
 }
