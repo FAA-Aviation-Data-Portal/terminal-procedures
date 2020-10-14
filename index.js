@@ -63,7 +63,7 @@ const listOne = async (icao, options) => {
   // applied to every request
   let filterFlags = []
   // Validate the flag option first 
-  if (typeof options === 'object' && Array.isArray(options.flag)) {
+  if (typeof options === 'object' && Array.isArray(options.flag) && options.flag.length) {
     for (let f = 0, fLen = options.flag.length; f < fLen; f++) {
       switch (options.flag[f].toUpperCase()) {
         case 'A':
