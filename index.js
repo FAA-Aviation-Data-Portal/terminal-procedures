@@ -139,7 +139,14 @@ const link = ($row, columnIndex) =>
     .find('a')
     .attr('href')
 
-const extractRow = $row => {
+/**
+ * Extract the relevant information from the dom node and return
+ * an object with the data mapped by the appropriate named key
+ * @param {HTMLNode} $row - The dom node that contains the tabular data
+ * @param {String} effectiveStartDate - The start date the terminal procedure is effective for 
+ * @param {HTMLNode} effectiveEndDate - The end date the terminal procedure is effective for
+ */
+const extractRow = ($row, effectiveStartDate, effectiveEndDate) => {
   const type = text($row, 7)
 
   if (!type) {
@@ -181,7 +188,29 @@ const extractRow = $row => {
     compare: {
       name: text($row, 9),
       url: link($row, 9)
-    }
+    },
+    effectiveStartDate,
+    effectiveEndDate
+  }
+}
+
+/**
+ * Scrape the Effective date range from the dom
+ * @param {Object} $ - The Cheerio object that contains the serialized dom
+ * @returns {Object} - An object containing the effective start and end date
+ */
+const extractEffectiveDates = $ => {
+  const baseEffectiveDateString = $('.resultsSummary .join').html()
+  .split(':')[1]
+  .split('<')[0]
+  .trim()
+
+  const [ startMonthDay, remainder ] = baseEffectiveDateString.split('-')
+  const [ endMonthDay, yearAndCycle ] = remainder.split(',')
+  const [ year, _ ] = yearAndCycle.split('[')
+  return {
+    effectiveStartDate: new Date(`${startMonthDay.trim()} ${year}`),
+    effectiveEndDate: new Date(`${endMonthDay.trim()} ${year}`)
   }
 }
 
@@ -213,10 +242,12 @@ const parse = html => {
     return { results, pageCount }
   }
 
+  const { effectiveStartDate, effectiveEndDate } = extractEffectiveDates($)
+
   results = $resultsTable
     .find('tr')
     .toArray()
-    .map(row => extractRow($(row)))
+    .map(row => extractRow($(row), effectiveStartDate, effectiveEndDate))
     .filter(x => !!x)
 
   if (results.length > 0) {
