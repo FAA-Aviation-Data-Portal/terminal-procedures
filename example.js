@@ -2,6 +2,8 @@ const terminalProcedures = require('./')
 
 terminalProcedures.fetchCurrentCycle().then(r => console.log(r))
 
+terminalProcedures.currentCycleEffectiveDates().then(console.log)
+
 // Also try updateing the Flag property to include one or more of the following:
 //  A for only those that were Added since the last effective date
 //  C for only those that were Changed since the last effective date

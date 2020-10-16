@@ -33,7 +33,9 @@ terminalProcedures.currentCycleEffectiveDates = async () => {
     .get(BASE_URL)
     .set('Accept', ACCEPT)
   
-  return extractEffectiveDates(cheerio.load(response.text))
+  const $ = cheerio.load(response.text)
+  var currentCycle = $('select#cycle > option:contains(Current)').text()
+  return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
 } 
 
 /**
@@ -213,7 +215,14 @@ const extractEffectiveDates = $ => {
   .split('<')[0]
   .trim()
 
-  const [ startMonthDay, remainder ] = baseEffectiveDateString.split('-')
+  return parseEffectiveDates(baseEffectiveDateString)
+}
+
+const parseEffectiveDates = str => {
+  if (!str) {
+    return null
+  }
+  const [ startMonthDay, remainder ] = str.split('-')
   const [ endMonthDay, yearAndCycle ] = remainder.split(',')
   const [ year, _ ] = yearAndCycle.split('[')
   return {
