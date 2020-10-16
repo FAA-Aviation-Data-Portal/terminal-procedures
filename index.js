@@ -28,6 +28,14 @@ terminalProcedures.list = (icaos, options = defaultQueryOptions) => {
   return listOne(icaos, options)
 }
 
+terminalProcedures.currentCycleEffectiveDates = async () => {
+  const response = await superagent
+    .get(BASE_URL)
+    .set('Accept', ACCEPT)
+  
+  return extractEffectiveDates(cheerio.load(response.text))
+} 
+
 /**
  * Fetch the current diagrams distribution cycle numbers (.e.g, 1813)
  */
