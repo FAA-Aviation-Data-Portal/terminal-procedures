@@ -28,6 +28,16 @@ terminalProcedures.list = (icaos, options = defaultQueryOptions) => {
   return listOne(icaos, options)
 }
 
+terminalProcedures.currentCycleEffectiveDates = async () => {
+  const response = await superagent
+    .get(BASE_URL)
+    .set('Accept', ACCEPT)
+  
+  const $ = cheerio.load(response.text)
+  var currentCycle = $('select#cycle > option:contains(Current)').text()
+  return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
+} 
+
 /**
  * Fetch the current diagrams distribution cycle numbers (.e.g, 1813)
  */
@@ -205,7 +215,14 @@ const extractEffectiveDates = $ => {
   .split('<')[0]
   .trim()
 
-  const [ startMonthDay, remainder ] = baseEffectiveDateString.split('-')
+  return parseEffectiveDates(baseEffectiveDateString)
+}
+
+const parseEffectiveDates = str => {
+  if (!str) {
+    return null
+  }
+  const [ startMonthDay, remainder ] = str.split('-')
   const [ endMonthDay, yearAndCycle ] = remainder.split(',')
   const [ year, _ ] = yearAndCycle.split('[')
   return {
