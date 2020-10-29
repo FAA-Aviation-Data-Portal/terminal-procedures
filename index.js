@@ -9,6 +9,7 @@ const ACCEPT = 'text/html'
 
 const defaultQueryOptions = {
   flag: [], // 'A' - Added, 'C' - Changed, 'D' - Deleted, Empty - All valid procedures
+  getNextCycle: false // `false` do not get the 'Next' cycle, only get the 'Current' cycle; `true` get the 'Next' cycle if available
 }
 
 /**
@@ -39,16 +40,76 @@ terminalProcedures.currentCycleEffectiveDates = async () => {
 } 
 
 /**
- * Fetch the current diagrams distribution cycle numbers (.e.g, 1813)
+ * Returns the text and values of the targeted <select/> element
+ * @param {string} cycle - The target cycle to retrieve. Valid values are 'Current' or 'Next'
  */
-const fetchCurrentCycle = (terminalProcedures.fetchCurrentCycle = async () => {
+const fetchCycle = async (cycle = 'Current') => {
+  // Only all the values 'Current' or 'Next'
+  if (cycle !== 'Current' && cycle !== 'Next') {
+    cycle = 'Current'
+  }
   const response = await superagent
     .get(BASE_URL)
     .set('Accept', ACCEPT)
-
+  
   const $ = cheerio.load(response.text)
-  return $('select#cycle > option:contains(Current)').val()
-})
+  const $cycle = $(`select#cycle > option:contains(${cycle})`)
+  if (!$cycle) {
+    return $cycle
+  }
+  return {
+    text: $cycle.text(),
+    val: $cycle.val()
+  }
+}
+
+/**
+ * Returns the text and values of the targeted <select/> element
+ * @param {string} cycle - The target cycle to retrieve. Valid values are 'Current' or 'Next'
+ */
+terminalProcedures.fetchCycle = fetchCycle
+
+terminalProcedures.getCycleEffectiveDates = async (cycle = 'Current') => {
+  const { text: currentCycle, } = await fetchCycle(cycle)
+  return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
+} 
+
+terminalProcedures.currentCycleEffectiveDates = async () => {
+  const { text: currentCycle, } = await fetchCycle()
+  if (!currentCycle) {
+    console.warn('Could not retrieve current cycle effective dates')
+    return
+  }
+  return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
+}
+
+/**
+ * Fetch the current diagrams distribution cycle numbers (.e.g, 1813)
+ */
+const fetchCurrentCycleCode = async () => {
+  const cycle = await fetchCycle('Current')
+  if (!cycle) {
+    console.warn('Current cycle not found or not available.')
+    return null
+  }
+  return cycle.val
+}
+
+terminalProcedures.fetchCurrentCycleCode = fetchCurrentCycleCode
+
+/**
+ * Fetch the current diagrams distribution cycle numbers (.e.g, 1813)
+ */
+const fetchNextCycleCode = async () => {
+  const cycle = await fetchCycle('Next')
+  if (!cycle) {
+    console.warn('Next cycle not found or not available. The Next cycle is available 19 days before the end of the current cycle.')
+    return null
+  }
+  return cycle.val
+}
+
+terminalProcedures.fetchNextCycleCode = fetchNextCycleCode
 
 /**
  * Using the current cycle, fetch the terminal procedures for a single ICAO code
@@ -58,7 +119,20 @@ const fetchCurrentCycle = (terminalProcedures.fetchCurrentCycle = async () => {
  * @returns {Array} - The scraped terminal procedures
  */
 const listOne = async (icao, options) => {
-  const searchCycle = await fetchCurrentCycle()
+  let searchCycle = null
+  
+  if (options.getNextCycle === true) {
+    searchCycle = await fetchNextCycleCode()
+  }
+
+  // If the next cycle is not requested, or it is, but it is not
+  // available, default to the current cycle
+  if (searchCycle === null) {
+    if (options.getNextCycle === true) {
+      console.warn('Next cycle not available. Retrieving current cycle instead.')
+    }
+    searchCycle = await fetchCurrentCycleCode()
+  }
 
   // Build up a base set of query params
   let urlParams = [ 'sort=type', 'dir=asc', `ident=${icao}`, ]
@@ -225,10 +299,14 @@ const parseEffectiveDates = str => {
   const [ startMonthDay, remainder ] = str.split('-')
   const [ endMonthDay, yearAndCycle ] = remainder.split(',')
   const [ year, _ ] = yearAndCycle.split('[')
-  return {
-    effectiveStartDate: new Date(`${startMonthDay.trim()} ${year}`),
-    effectiveEndDate: new Date(`${endMonthDay.trim()} ${year}`)
-  }
+
+  const effectiveStartDate = new Date(`${startMonthDay.trim()} ${year}`)
+  effectiveStartDate.setUTCHours(0,0,0,0)
+
+  const effectiveEndDate = new Date(`${endMonthDay.trim()} ${year}`)
+  effectiveEndDate.setUTCHours(0,0,0,0)
+
+  return { effectiveStartDate, effectiveEndDate }
 }
 
 /**
