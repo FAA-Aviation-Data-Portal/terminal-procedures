@@ -109,7 +109,20 @@ terminalProcedures.fetchNextCycleCode = fetchNextCycleCode
  * @returns {Array} - The scraped terminal procedures
  */
 const listOne = async (icao, options) => {
-  const searchCycle = await fetchCurrentCycleCode()
+  let searchCycle = null
+  
+  if (options.getNextCycle === true) {
+    searchCycle = await fetchNextCycleCode()
+  }
+
+  // If the next cycle is not requested, or it is, but it is not
+  // available, default to the current cycle
+  if (searchCycle === null) {
+    if (options.getNextCycle === true) {
+      console.warn('Next cycle not available. Retrieving current cycle instead.')
+    }
+    searchCycle = await fetchCurrentCycleCode()
+  }
 
   // Build up a base set of query params
   let urlParams = [ 'sort=type', 'dir=asc', `ident=${icao}`, ]
