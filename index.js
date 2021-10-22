@@ -33,11 +33,13 @@ terminalProcedures.currentCycleEffectiveDates = async () => {
   const response = await superagent
     .get(BASE_URL)
     .set('Accept', ACCEPT)
-  
+    .timeout({ deadline: 30000 })
+    .retry(3)
+
   const $ = cheerio.load(response.text)
   var currentCycle = $('select#cycle > option:contains(Current)').text()
   return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
-} 
+}
 
 /**
  * Returns the text and values of the targeted <select/> element
@@ -51,7 +53,9 @@ const fetchCycle = async (cycle = 'Current') => {
   const response = await superagent
     .get(BASE_URL)
     .set('Accept', ACCEPT)
-  
+    .timeout({ deadline: 30000 })
+    .retry(3)
+
   const $ = cheerio.load(response.text)
   const $cycle = $(`select#cycle > option:contains(${cycle})`)
   if (!$cycle) {
@@ -72,7 +76,7 @@ terminalProcedures.fetchCycle = fetchCycle
 terminalProcedures.getCycleEffectiveDates = async (cycle = 'Current') => {
   const { text: currentCycle, } = await fetchCycle(cycle)
   return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
-} 
+}
 
 terminalProcedures.currentCycleEffectiveDates = async () => {
   const { text: currentCycle, } = await fetchCycle()
@@ -120,7 +124,7 @@ terminalProcedures.fetchNextCycleCode = fetchNextCycleCode
  */
 const listOne = async (icao, options) => {
   let searchCycle = null
-  
+
   if (options.getNextCycle === true) {
     searchCycle = await fetchNextCycleCode()
   }
@@ -146,7 +150,7 @@ const listOne = async (icao, options) => {
   // are used to issue separate requests whereas the `urlParams` are
   // applied to every request
   let filterFlags = []
-  // Validate the flag option first 
+  // Validate the flag option first
   if (typeof options === 'object' && Array.isArray(options.flag) && options.flag.length) {
     for (let f = 0, fLen = options.flag.length; f < fLen; f++) {
       switch (options.flag[f].toUpperCase()) {
@@ -206,6 +210,8 @@ const listOne = async (icao, options) => {
 const getProcedures = async url => superagent
   .get(url)
   .set('Accept', ACCEPT)
+  .timeout({ deadline: 30000 })
+  .retry(3)
   .then(res => parse(res.text))
 
 /**
@@ -227,7 +233,7 @@ const link = ($row, columnIndex) =>
  * Extract the relevant information from the dom node and return
  * an object with the data mapped by the appropriate named key
  * @param {HTMLNode} $row - The dom node that contains the tabular data
- * @param {String} effectiveStartDate - The start date the terminal procedure is effective for 
+ * @param {String} effectiveStartDate - The start date the terminal procedure is effective for
  * @param {HTMLNode} effectiveEndDate - The end date the terminal procedure is effective for
  */
 const extractRow = ($row, effectiveStartDate, effectiveEndDate) => {
@@ -311,7 +317,7 @@ const parseEffectiveDates = str => {
 
 /**
  * Parse the response HTML into JSON
- * @param {string} html 
+ * @param {string} html
  * @returns {Object} - The scraped and transformed data and the number of result pages
  */
 const parse = html => {
