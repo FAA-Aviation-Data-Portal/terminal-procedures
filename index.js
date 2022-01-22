@@ -307,9 +307,16 @@ const parseEffectiveDates = str => {
   const [ year, _ ] = yearAndCycle.split('[')
 
   const effectiveStartDate = new Date(`${startMonthDay.trim()} ${year}`)
-  effectiveStartDate.setUTCHours(0,0,0,0)
-
   const effectiveEndDate = new Date(`${endMonthDay.trim()} ${year}`)
+
+  // If effectiveStartDate does not have a year specified,
+  // it will default to the same year as effectiveEndDate.
+  // So if the date range spans Jan 1, roll effectiveStartDate back one year.
+  if (effectiveStartDate > effectiveEndDate) {
+    effectiveStartDate.setFullYear(effectiveStartDate.getFullYear() - 1 );
+  }
+
+  effectiveStartDate.setUTCHours(0,0,0,0)
   effectiveEndDate.setUTCHours(0,0,0,0)
 
   return { effectiveStartDate, effectiveEndDate }
