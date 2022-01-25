@@ -29,18 +29,6 @@ terminalProcedures.list = (icaos, options = defaultQueryOptions) => {
   return listOne(icaos, options)
 }
 
-terminalProcedures.currentCycleEffectiveDates = async () => {
-  const response = await superagent
-    .get(BASE_URL)
-    .set('Accept', ACCEPT)
-    .timeout({ deadline: 30000 })
-    .retry(3)
-
-  const $ = cheerio.load(response.text)
-  var currentCycle = $('select#cycle > option:contains(Current)').text()
-  return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
-}
-
 /**
  * Returns the text and values of the targeted <select/> element
  * @param {string} cycle - The target cycle to retrieve. Valid values are 'Current' or 'Next'
@@ -75,16 +63,15 @@ terminalProcedures.fetchCycle = fetchCycle
 
 terminalProcedures.getCycleEffectiveDates = async (cycle = 'Current') => {
   const { text: currentCycle, } = await fetchCycle(cycle)
+  if (!currentCycle) {
+    console.warn(`Could not retrieve ${cycle} cycle effective dates`)
+    return
+  }
   return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
 }
 
 terminalProcedures.currentCycleEffectiveDates = async () => {
-  const { text: currentCycle, } = await fetchCycle()
-  if (!currentCycle) {
-    console.warn('Could not retrieve current cycle effective dates')
-    return
-  }
-  return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
+  return getCycleEffectiveDates()
 }
 
 /**
