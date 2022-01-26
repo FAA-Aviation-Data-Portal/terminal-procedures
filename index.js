@@ -42,8 +42,8 @@ const fetchCycle = async (cycle = 'Current') => {
     .get(BASE_URL)
     .set('Accept', ACCEPT)
     .timeout({
-      response: 30e3,
-      deadline: 60e3
+      response: 10e3,
+      deadline: 30e3
     })
     .retry(3)
 
@@ -202,7 +202,7 @@ const getProcedures = async url => superagent
   .set('Accept', ACCEPT)
   .timeout({
     response: 10e3,
-    deadline: 60e3
+    deadline: 30e3
   })
   .retry(3)
   .then(res => parse(res.text))
