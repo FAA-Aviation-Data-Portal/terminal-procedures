@@ -29,18 +29,6 @@ terminalProcedures.list = (icaos, options = defaultQueryOptions) => {
   return listOne(icaos, options)
 }
 
-terminalProcedures.currentCycleEffectiveDates = async () => {
-  const response = await superagent
-    .get(BASE_URL)
-    .set('Accept', ACCEPT)
-    .timeout({ deadline: 30000 })
-    .retry(3)
-
-  const $ = cheerio.load(response.text)
-  var currentCycle = $('select#cycle > option:contains(Current)').text()
-  return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
-}
-
 /**
  * Returns the text and values of the targeted <select/> element
  * @param {string} cycle - The target cycle to retrieve. Valid values are 'Current' or 'Next'
@@ -53,7 +41,10 @@ const fetchCycle = async (cycle = 'Current') => {
   const response = await superagent
     .get(BASE_URL)
     .set('Accept', ACCEPT)
-    .timeout({ deadline: 30000 })
+    .timeout({
+      response: 10e3,
+      deadline: 30e3
+    })
     .retry(3)
 
   const $ = cheerio.load(response.text)
@@ -74,17 +65,16 @@ const fetchCycle = async (cycle = 'Current') => {
 terminalProcedures.fetchCycle = fetchCycle
 
 terminalProcedures.getCycleEffectiveDates = async (cycle = 'Current') => {
-  const { text: currentCycle, } = await fetchCycle(cycle)
-  return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
+  const currentCycle = await fetchCycle(cycle)
+  if (!currentCycle || !currentCycle.text) {
+    console.warn(`${cycle} cycle effective dates not found or not available.`)
+    return
+  }
+  return parseEffectiveDates(currentCycle.text.replace(/(\n|\t)/gm, ''))
 }
 
 terminalProcedures.currentCycleEffectiveDates = async () => {
-  const { text: currentCycle, } = await fetchCycle()
-  if (!currentCycle) {
-    console.warn('Could not retrieve current cycle effective dates')
-    return
-  }
-  return parseEffectiveDates(currentCycle.replace(/(\n|\t)/gm, ''))
+  return getCycleEffectiveDates()
 }
 
 /**
@@ -92,8 +82,8 @@ terminalProcedures.currentCycleEffectiveDates = async () => {
  */
 const fetchCurrentCycleCode = async () => {
   const cycle = await fetchCycle('Current')
-  if (!cycle) {
-    console.warn('Current cycle not found or not available.')
+  if (!cycle || !cycle.val ) {
+    console.warn('Current cycle code not found or not available.')
     return null
   }
   return cycle.val
@@ -106,8 +96,8 @@ terminalProcedures.fetchCurrentCycleCode = fetchCurrentCycleCode
  */
 const fetchNextCycleCode = async () => {
   const cycle = await fetchCycle('Next')
-  if (!cycle) {
-    console.warn('Next cycle not found or not available. The Next cycle is available 19 days before the end of the current cycle.')
+  if (!cycle || !cycle.val) {
+    console.warn('Next cycle code not found or not available. The Next cycle is available 19 days before the end of the current cycle.')
     return null
   }
   return cycle.val
@@ -210,7 +200,10 @@ const listOne = async (icao, options) => {
 const getProcedures = async url => superagent
   .get(url)
   .set('Accept', ACCEPT)
-  .timeout({ deadline: 30000 })
+  .timeout({
+    response: 10e3,
+    deadline: 30e3
+  })
   .retry(3)
   .then(res => parse(res.text))
 
