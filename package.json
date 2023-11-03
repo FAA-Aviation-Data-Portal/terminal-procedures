@@ -1,7 +1,7 @@
 {
   "name": "terminal-procedures",
   "description": "Fetch terminal procedures from https://www.faa.gov/",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "author": {
     "name": "FAA Aviation Data Portal",
     "email": "9-AJO-WCAM-IT@faa.gov",
