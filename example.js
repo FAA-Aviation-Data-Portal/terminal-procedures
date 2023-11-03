@@ -53,7 +53,7 @@ terminalProcedures.currentCycleEffectiveDates().then(c => {
 //  Leave empty to get all regardless of if they've been added or changed
 // The `getNextCycle` option will get the next cycle if it is available when set to true
 //  If it is omitted or set to false, the current cycle will be queried
-terminalProcedures.list('PANC', { flag: [ ], getNextCycle: true, }).then(results => {
+terminalProcedures.list('PANC', { flag: [ ], getNextCycle: true }).then(results => {
   console.log(results)
   const out = results.map(tp => {
     return {
@@ -61,7 +61,7 @@ terminalProcedures.list('PANC', { flag: [ ], getNextCycle: true, }).then(results
       type: tp.type,
       url: tp.procedure.url,
       effectiveStartDate: tp.effectiveStartDate,
-      effectiveEndDate: tp.effectiveEndDate,
+      effectiveEndDate: tp.effectiveEndDate
     }
   })
   console.log(
