@@ -21,8 +21,8 @@ describe('terminalProcedures', () => {
     return terminalProcedures.list('PANC')
   })
 
-  it('should expose the fetchCurrentCycle method', () => {
-    return terminalProcedures.fetchCurrentCycle().then(cycle => {
+  it('should expose the fetchCurrentCycleCode method', () => {
+    return terminalProcedures.fetchCurrentCycleCode().then(cycle => {
       assert(parseInt(cycle))
     })
   })

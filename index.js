@@ -64,7 +64,7 @@ const fetchCycle = async (cycle = 'Current') => {
  */
 terminalProcedures.fetchCycle = fetchCycle
 
-terminalProcedures.getCycleEffectiveDates = async (cycle = 'Current') => {
+const getCycleEffectiveDates = async (cycle = 'Current') => {
   const currentCycle = await fetchCycle(cycle)
   if (!currentCycle || !currentCycle.text) {
     console.warn(`${cycle} cycle effective dates not found or not available.`)
@@ -72,6 +72,7 @@ terminalProcedures.getCycleEffectiveDates = async (cycle = 'Current') => {
   }
   return parseEffectiveDates(currentCycle.text.replace(/(\n|\t)/gm, ''))
 }
+terminalProcedures.getCycleEffectiveDates = getCycleEffectiveDates
 
 terminalProcedures.currentCycleEffectiveDates = async () => {
   return getCycleEffectiveDates()
@@ -82,7 +83,7 @@ terminalProcedures.currentCycleEffectiveDates = async () => {
  */
 const fetchCurrentCycleCode = async () => {
   const cycle = await fetchCycle('Current')
-  if (!cycle || !cycle.val ) {
+  if (!cycle || !cycle.val) {
     console.warn('Current cycle code not found or not available.')
     return null
   }
@@ -129,7 +130,7 @@ const listOne = async (icao, options) => {
   }
 
   // Build up a base set of query params
-  let urlParams = [ 'sort=type', 'dir=asc', `ident=${icao}`, ]
+  const urlParams = [ 'sort=type', 'dir=asc', `ident=${icao}` ]
   // The searchCycle is optional as the API assumes the latest already
   // and this function uses the latest cycle
   if (searchCycle) {
@@ -139,27 +140,26 @@ const listOne = async (icao, options) => {
   // Manage these separately than the base `urlParams` since these
   // are used to issue separate requests whereas the `urlParams` are
   // applied to every request
-  let filterFlags = []
+  const filterFlags = []
   // Validate the flag option first
   if (typeof options === 'object' && Array.isArray(options.flag) && options.flag.length) {
     for (let f = 0, fLen = options.flag.length; f < fLen; f++) {
       switch (options.flag[f].toUpperCase()) {
         case 'A':
-          filterFlags.push(`&filterAdded=1`)
+          filterFlags.push('&filterAdded=1')
           break
         case 'C':
-          filterFlags.push(`&filterChanged=1`)
+          filterFlags.push('&filterChanged=1')
           break
         case 'D':
-          filterFlags.push(`&filterDeleted=1`)
+          filterFlags.push('&filterDeleted=1')
           break
         default:
           // Do nothing and just get them all
           filterFlags.push('')
       }
     }
-  }
-  else {
+  } else {
     // Fallback to just getting them all
     filterFlags.push('')
   }
@@ -174,7 +174,7 @@ const listOne = async (icao, options) => {
     // Set up the base req url for this flag type
     _reqUrl = `${procUrl}${filterFlags[i]}`
     // Issue an initial request without any page param
-    let { results, pageCount, } = await getProcedures(_reqUrl)
+    let { results, pageCount } = await getProcedures(_reqUrl)
     if (results.length) {
       // Flatten the results in to the base array that will be returned
       procedures.push(...results)
@@ -184,7 +184,7 @@ const listOne = async (icao, options) => {
         // since that was already requested
         let j
         for (j = 2; j < pageCount; j++) {
-          let { results: _results, pageCount: _pageCount } = await getProcedures(`${_reqUrl}&page=${j}`)
+          const { results: _results, pageCount: _pageCount } = await getProcedures(`${_reqUrl}&page=${j}`)
           procedures.push(..._results)
           if (_pageCount !== pageCount) {
             pageCount = _pageCount
@@ -284,9 +284,9 @@ const extractRow = ($row, effectiveStartDate, effectiveEndDate) => {
  */
 const extractEffectiveDates = $ => {
   const baseEffectiveDateString = $('.resultsSummary .join').html()
-  .split(':')[1]
-  .split('<')[0]
-  .trim()
+    .split(':')[1]
+    .split('<')[0]
+    .trim()
 
   return parseEffectiveDates(baseEffectiveDateString)
 }
@@ -297,7 +297,7 @@ const parseEffectiveDates = str => {
   }
   const [ startMonthDay, remainder ] = str.split('-')
   const [ endMonthDay, yearAndCycle ] = remainder.split(',')
-  const [ year, _ ] = yearAndCycle.split('[')
+  const [ year ] = yearAndCycle.split('[')
 
   const effectiveStartDate = new Date(`${startMonthDay.trim()} ${year}`)
   const effectiveEndDate = new Date(`${endMonthDay.trim()} ${year}`)
@@ -306,11 +306,11 @@ const parseEffectiveDates = str => {
   // it will default to the same year as effectiveEndDate.
   // So if the date range spans Jan 1, roll effectiveStartDate back one year.
   if (effectiveStartDate > effectiveEndDate) {
-    effectiveStartDate.setFullYear(effectiveStartDate.getFullYear() - 1 );
+    effectiveStartDate.setFullYear(effectiveStartDate.getFullYear() - 1)
   }
 
-  effectiveStartDate.setUTCHours(0,0,0,0)
-  effectiveEndDate.setUTCHours(0,0,0,0)
+  effectiveStartDate.setUTCHours(0, 0, 0, 0)
+  effectiveEndDate.setUTCHours(0, 0, 0, 0)
 
   return { effectiveStartDate, effectiveEndDate }
 }
@@ -337,8 +337,7 @@ const parse = html => {
   if (!!noResultsFound && noResultsFound === 'No results found.') {
     console.warn(noResultsFound)
     return { results, pageCount }
-  }
-  else if (!$resultsTable.html()) {
+  } else if (!$resultsTable.html()) {
     console.error('Unable to parse the #resultsTable page element')
     return { results, pageCount }
   }

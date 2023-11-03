@@ -1,24 +1,26 @@
 {
   "name": "terminal-procedures",
   "description": "Fetch terminal procedures from https://www.faa.gov/",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "author": {
     "name": "FAA Aviation Data Portal",
     "email": "9-AJO-WCAM-IT@faa.gov",
     "url": "https://github.com/FAA-Aviation-Data-Portal"
   },
   "dependencies": {
-    "cheerio": "^1.0.0-rc.3",
-    "superagent": "^6.1.0"
+    "cheerio": "^1.0.0-rc.12",
+    "superagent": "^8.1.2"
   },
   "devDependencies": {
-    "coveralls": "^3.1.0",
-    "mocha": "^8.1.3",
+    "coveralls": "^3.1.1",
+    "mocha": "^10.2.0",
     "nyc": "^15.1.0",
-    "standard": "^14.3.4"
+    "standard": "^17.1.0",
+    "superstruct": "^1.0.3"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=16.0",
+    "npm": ">=7.10"
   },
   "eslintConfig": {
     "extends": [
