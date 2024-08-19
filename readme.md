@@ -1,3 +1,7 @@
+⚠️ This project has been deprecated. ⚠️
+
+**This package is no longer maintained and will be deleted in 30 days.**
+
 # terminal-procedures
 
 Fetch the latest terminal procedures information from https://www.faa.gov/
